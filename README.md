@@ -1,4 +1,4 @@
-# Bright Horizon
+# Well Focus Classes
 
 A small Flask app to track tuition students and fees.
 

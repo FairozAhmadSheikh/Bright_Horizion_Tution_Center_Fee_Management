@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-md mx-auto">
+  <form method="post" class="bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-4">Admin Login</h2>
+    <label class="block mb-2">Username
+      <input name="username" class="mt-1 w-full border rounded p-2" value="{{ request.form.username or '' }}" required>
+    </label>
+    <label class="block mb-4">Password
+      <input name="password" type="password" class="mt-1 w-full border rounded p-2" required>
+    </label>
+    <div class="flex justify-between items-center">
+      <button class="bg-indigo-600 text-white px-4 py-2 rounded">Login</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

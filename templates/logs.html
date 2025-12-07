@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-2xl font-semibold mb-4">Activity Logs</h2>
+<ul class="bg-white p-4 rounded shadow space-y-2">
+  {% for l in logs %}
+    <li class="text-sm">{{ l.at }} — {{ l.by }} — {{ l.action }} — {{ l.details }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bg-white p-8 rounded shadow">
+  <h1 class="text-3xl font-bold text-indigo-700">Well Focus Classes</h1>
+  <p class="mt-2 text-gray-700">Simple fee management for your tuition classes — track payments, see unpaid dues, and visualize growth.</p>
+  <div class="mt-6">
+    <a class="bg-indigo-600 text-white px-4 py-2 rounded" href="{{ url_for('login') }}">Admin Login</a>
+  </div>
+</div>
+{% endblock %}

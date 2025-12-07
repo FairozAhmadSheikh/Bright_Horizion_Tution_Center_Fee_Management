@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex justify-between items-center mb-4">
+  <h2 class="text-2xl font-semibold">Students</h2>
+  <div>
+    <a class="bg-green-600 text-white px-3 py-1 rounded" href="{{ url_for('add_student') }}">Add Student</a>
+  </div>
+</div>
+
+<div class="mb-4">
+  <form method="get">
+    <select name="class" onchange="this.form.submit()" class="border p-2 rounded">
+      <option value="">All classes</option>
+      {% for c in classes %}
+      <option value="{{ c }}" {% if selected_class==c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="grid md:grid-cols-2 gap-4">
+  {% for s in students %}
+  <div class="bg-white p-4 rounded shadow">
+    <div class="flex justify-between items-start">
+      <div>
+        <h3 class="font-semibold text-lg">{{ s.name }}</h3>
+        <div class="text-sm text-gray-600">{{ s.class }} • {{ s.contact }}</div>
+      </div>
+      <div class="text-right">
+        <div class="text-lg font-bold">₹{{ s.unpaid }}</div>
+        <div class="text-xs text-gray-500">unpaid</div>
+      </div>
+    </div>
+    <div class="mt-3 flex gap-2">
+      <a href="{{ url_for('edit_student', sid=s._id) }}" class="px-3 py-1 border rounded">Edit</a>
+
+      <form method="post" action="{{ url_for('delete_student', sid=s._id) }}" onsubmit="return confirm('Do you really want to delete this student?');">
+        <button type="submit" class="px-3 py-1 border rounded text-red-600">Delete</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

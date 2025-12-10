@@ -195,10 +195,21 @@ def students_list():
 @admin_required
 def add_student():
     if request.method == "POST":
-        name = request.form.get("name")
-        cls = request.form.get("class")
+        name = request.form.get("name").strip()
+        cls = request.form.get("class").strip()
         contact = request.form.get("contact")
         total_fee = float(request.form.get("total_fee") or 0)
+
+        # 🔍 Duplicate Check
+        existing = students_col.find_one({
+            "name": {"$regex": f"^{name}$", "$options": "i"},   # case-insensitive same name
+            "class": cls
+        })
+
+        if existing:
+            flash("⚠ A student with this name already exists in this class!", "warning")
+            return redirect(url_for("add_student"))
+
         now = datetime.utcnow()
         student = {
             "name": name,
@@ -209,12 +220,15 @@ def add_student():
             "created_at": now,
             "updated_at": now
         }
+
         res = students_col.insert_one(student)
         log_action("add_student", {"student_id": str(res.inserted_id), "name": name})
-        flash("Student added", "success")
+
+        flash("Student added successfully!", "success")
         return redirect(url_for("students_list"))
 
     return render_template("student_form.html", action="Add", student=None)
+
 
 
 @app.route("/admin/student/<sid>/edit", methods=["GET", "POST"])

@@ -8,6 +8,24 @@ from bson import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 
+
+# cleannig name
+def clean_name(name: str) -> str:
+    """
+    Normalize student name:
+      - returns empty string for falsy input
+      - strips leading/trailing spaces
+      - collapses multiple internal spaces to one
+      - converts to Title Case (each word capitalized)
+    Example: "  moHaMmAd   fairoz  " -> "Mohammad Fairoz"
+    """
+    if not name:
+        return ""
+    # split() collapses multiple whitespace and trims ends, then join with single spaces
+    cleaned = " ".join(name.split())
+    return cleaned.title()
+
+
 load_dotenv()
 
 # --- Configuration ---
@@ -195,14 +213,15 @@ def students_list():
 @admin_required
 def add_student():
     if request.method == "POST":
-        name = request.form.get("name").strip()
-        cls = request.form.get("class").strip()
-        contact = request.form.get("contact")
+        raw_name = request.form.get("name")
+        name = clean_name(raw_name)                      # normalize
+        cls = request.form.get("class", "").strip()
+        contact = request.form.get("contact", "").strip()
         total_fee = float(request.form.get("total_fee") or 0)
 
-        # 🔍 Duplicate Check
+        # Duplicate check (exact match on normalized name + same class)
         existing = students_col.find_one({
-            "name": {"$regex": f"^{name}$", "$options": "i"},   # case-insensitive same name
+            "name": name,
             "class": cls
         })
 
@@ -220,14 +239,13 @@ def add_student():
             "created_at": now,
             "updated_at": now
         }
-
         res = students_col.insert_one(student)
         log_action("add_student", {"student_id": str(res.inserted_id), "name": name})
-
-        flash("Student added successfully!", "success")
+        flash("Student added", "success")
         return redirect(url_for("students_list"))
 
     return render_template("student_form.html", action="Add", student=None)
+
 
 
 

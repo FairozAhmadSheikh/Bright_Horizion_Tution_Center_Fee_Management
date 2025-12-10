@@ -252,37 +252,44 @@ def add_student():
 @app.route("/admin/student/<sid>/edit", methods=["GET", "POST"])
 @admin_required
 def edit_student(sid):
-    try:
-        stud = students_col.find_one({"_id": ObjectId(sid)})
-    except:
-        stud = None
-    if not stud:
+    from bson import ObjectId
+    student = students_col.find_one({"_id": ObjectId(sid)})
+    if not student:
         flash("Student not found", "error")
         return redirect(url_for("students_list"))
 
     if request.method == "POST":
-        name = request.form.get("name")
-        cls = request.form.get("class")
-        contact = request.form.get("contact")
+        raw_name = request.form.get("name")
+        name = clean_name(raw_name)                      # normalize
+        cls = request.form.get("class", "").strip()
+        contact = request.form.get("contact", "").strip()
         total_fee = float(request.form.get("total_fee") or 0)
-        students_col.update_one(
-            {"_id": ObjectId(sid)},
-            {"$set": {
-                "name": name,
-                "class": cls,
-                "contact": contact,
-                "total_fee": total_fee,
-                "updated_at": datetime.utcnow()
-            }}
-        )
+
+        # Optional: check duplicates when editing (if name/class changed)
+        existing = students_col.find_one({
+            "name": name,
+            "class": cls,
+            "_id": {"$ne": ObjectId(sid)}   # ignore the same document
+        })
+        if existing:
+            flash("⚠ Another student with this name already exists in this class!", "warning")
+            return redirect(url_for("edit_student", sid=sid))
+
+        students_col.update_one({"_id": ObjectId(sid)}, {"$set": {
+            "name": name,
+            "class": cls,
+            "contact": contact,
+            "total_fee": total_fee,
+            "updated_at": datetime.utcnow()
+        }})
         log_action("edit_student", {"student_id": sid})
         flash("Student updated", "success")
         return redirect(url_for("students_list"))
 
-    # prepare for GET
-    stud["_id"] = sid
-    stud["unpaid"] = calc_unpaid(stud)
-    return render_template("student_form.html", action="Edit", student=stud)
+    # prepare student for display
+    student["_id"] = str(student.get("_id"))
+    return render_template("student_form.html", action="Edit", student=student)
+
 
 
 @app.route("/admin/student/<sid>/delete", methods=["POST"])

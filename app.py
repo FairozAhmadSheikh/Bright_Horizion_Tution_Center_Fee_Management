@@ -330,6 +330,29 @@ def logs():
         l["details"] = str(l.get("details"))
     return render_template("logs.html", logs=docs)
 
+@app.route("/admin/summary")
+@admin_required
+def summary():
+    # Total students
+    total_students = students_col.count_documents({})
+
+    # Class-wise counts
+    pipeline = [
+        {"$group": {"_id": "$class", "count": {"$sum": 1}}},
+        {"$sort": {"_id": 1}}
+    ]
+    class_counts = list(students_col.aggregate(pipeline))
+
+    # Free students (monthly_fee = 0)
+    free_students = students_col.count_documents({"total_fee": 0})
+
+    return render_template(
+        "summary.html",
+        total_students=total_students,
+        class_counts=class_counts,
+        free_students=free_students
+    )
+
 
 # --- Error handler ---
 @app.errorhandler(403)

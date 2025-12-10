@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Summary - Well Focus Classes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2 class="mb-4">Student Summary Overview</h2>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3">
+                <h5>Total Students</h5>
+                <h2>{{ total_students }}</h2>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3">
+                <h5>Students Taught for Free</h5>
+                <h2>{{ free_students }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class Wise Table -->
+    <div class="card shadow-sm p-3">
+        <h4>Class-wise Student Count</h4>
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Class</th>
+                    <th>Students</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in class_counts %}
+                <tr>
+                    <td>{{ c._id }}</td>
+                    <td>{{ c.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}

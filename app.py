@@ -197,13 +197,12 @@ def students_list():
 
     query = {}
 
-    # Class filter
-    if cls:
-        query["class"] = cls
-
-    # Name search (partial, case-insensitive)
+    # 🔍 If searching, ignore class filter
     if search:
         query["name"] = {"$regex": search, "$options": "i"}
+    else:
+        if cls:
+            query["class"] = cls
 
     docs = list(students_col.find(query).sort("name", 1))
 
@@ -219,7 +218,7 @@ def students_list():
         "students_list.html",
         students=students,
         classes=classes,
-        selected_class=cls,
+        selected_class=None if search else cls,
         search_query=search
     )
 

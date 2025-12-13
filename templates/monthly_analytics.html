@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Monthly Fee Analytics{% endblock %}
+
+{% block content %}
+
+<h2 class="text-2xl font-semibold mb-6 text-gray-700">Monthly Fee Analytics</h2>
+
+<!-- Graph Container -->
+<div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 mb-10">
+    <h3 class="text-lg font-semibold mb-4">Fee Collection Chart</h3>
+    <canvas id="monthChart"></canvas>
+</div>
+
+<!-- Table -->
+<div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+    <h3 class="text-lg font-semibold mb-4">Month-wise Report</h3>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-200">
+            <thead class="bg-indigo-600 text-white">
+                <tr>
+                    <th class="px-4 py-2 text-left">Month</th>
+                    <th class="px-4 py-2 text-right">Collected</th>
+                    <th class="px-4 py-2 text-right">Expected</th>
+                    <th class="px-4 py-2 text-right">Pending</th>
+                    <th class="px-4 py-2 text-right">% Completed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in labels %}
+                {% set collected = month_data[m]['collected'] if month_data[m] is defined and month_data[m]['collected'] is defined else 0 %}
+                {% set expected = month_data[m]['expected'] if month_data[m] is defined and month_data[m]['expected'] is defined else 0 %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-4 py-2 text-gray-700">{{ m }}</td>
+                    <td class="px-4 py-2 text-right text-green-700 font-semibold">₹{{ collected }}</td>
+                    <td class="px-4 py-2 text-right text-blue-700 font-semibold">₹{{ expected }}</td>
+                    <td class="px-4 py-2 text-right text-red-600 font-semibold">
+                        ₹{{ (expected - collected) if expected - collected > 0 else 0 }}
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                        {% if expected == 0 %}
+                            -
+                        {% else %}
+                            {{ ((collected / expected) * 100) | round(2) }}%
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Chart JS Script -->
+<script>
+  // Safely get data from server-rendered vars
+  const labels = {{ labels|tojson|safe }};
+  const collected = {{ collected|tojson|safe }};
+  const expected = {{ expected|tojson|safe }};
+
+  const ctx = document.getElementById('monthChart').getContext('2d');
+
+  new Chart(ctx, {
+      type: 'bar',
+      data: {
+          labels: labels,
+          datasets: [
+              {
+                  label: 'Collected',
+                  data: collected,
+                  // No explicit colors so Chart.js picks a default palette
+              },
+              {
+                  label: 'Expected',
+                  data: expected,
+              }
+          ]
+      },
+      options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+              y: {
+                  beginAtZero: true
+              }
+          }
+      }
+  });
+</script>
+
+{% endblock %}

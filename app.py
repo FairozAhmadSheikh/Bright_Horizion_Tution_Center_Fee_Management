@@ -193,20 +193,36 @@ def dashboard():
 @admin_required
 def students_list():
     cls = request.args.get("class")
+    search = request.args.get("q", "").strip()
+
     query = {}
+
+    # Class filter
     if cls:
         query["class"] = cls
+
+    # Name search (partial, case-insensitive)
+    if search:
+        query["name"] = {"$regex": search, "$options": "i"}
+
     docs = list(students_col.find(query).sort("name", 1))
+
     students = []
     for s in docs:
         s["_id"] = str(s["_id"])
         s["unpaid"] = calc_unpaid(s)
         students.append(s)
+
     classes = students_col.distinct("class")
-    return render_template("students_list.html",
-                           students=students,
-                           classes=classes,
-                           selected_class=cls)
+
+    return render_template(
+        "students_list.html",
+        students=students,
+        classes=classes,
+        selected_class=cls,
+        search_query=search
+    )
+
 
 
 @app.route("/admin/student/add", methods=["GET", "POST"])
@@ -390,6 +406,57 @@ def summary():
         total_students=total_students,
         class_counts=class_counts,
         free_students=free_students
+    )
+
+@app.route("/admin/analytics/monthly")
+@admin_required
+def monthly_analytics():
+    from collections import defaultdict
+
+    # Structure:
+    # month_data = {
+    #    "2025-01": {"collected": 0, "expected": 0},
+    #    "2025-02": {...}
+    # }
+
+    month_data = defaultdict(lambda: {"collected": 0, "expected": 0})
+
+    students = list(students_col.find())
+
+    for s in students:
+        monthly_fee = s.get("total_fee", 0)
+
+        # Expected fee: he should pay every month
+        for pay in s.get("payments", []):
+            month = pay.get("month")   # example: "2025-01"
+            amount = pay.get("amount", 0)
+
+            if not month:
+                continue
+
+            # Add collected amount
+            month_data[month]["collected"] += amount
+
+        # Add expected fee for ALL months that appear in DB (or we can generate months dynamically)
+        # We check payment history of student
+        paid_months = {p.get("month") for p in s.get("payments", [])}
+
+        for m in paid_months:
+            month_data[m]["expected"] += monthly_fee
+
+    # Sort months nicely
+    sorted_months = sorted(month_data.keys())
+
+    labels = sorted_months
+    collected_list = [month_data[m]["collected"] for m in sorted_months]
+    expected_list = [month_data[m]["expected"] for m in sorted_months]
+
+    return render_template(
+        "monthly_analytics.html",
+        labels=labels,
+        collected=collected_list,
+        expected=expected_list,
+        month_data=month_data
     )
 
 

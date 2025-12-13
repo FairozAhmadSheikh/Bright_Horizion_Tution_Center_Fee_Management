@@ -18,6 +18,32 @@
   </form>
 </div>
 
+<form method="GET" action="{{ url_for('students_list') }}" class="mb-6">
+  <div class="flex gap-3 max-w-md">
+    <input
+      type="text"
+      name="q"
+      value="{{ search_query }}"
+      placeholder="Search student by name..."
+      class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+    />
+    <button
+      type="submit"
+      class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+    >
+      Search
+    </button>
+    {% if search_query %}
+      <a href="{{ url_for('students_list') }}"
+        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+      Clear search
+      </a>
+    {% endif %}
+
+  </div>
+</form>
+
+
 <div class="grid md:grid-cols-2 gap-4">
   {% for s in students %}
   <div class="bg-white p-4 rounded shadow">
